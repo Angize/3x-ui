@@ -1,4 +1,4 @@
-name: Convert Each ZIP to TAR.GZ
+name: Convert ZIP to TAR.GZ and Upload to Releases
 
 on:
   workflow_dispatch:  # اجرای دستی از GitHub Actions
@@ -12,7 +12,7 @@ jobs:
 
       - name: Download latest release ZIP files
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           mkdir release_files
           gh release download --pattern "*.zip" --dir release_files || { echo "No ZIP files found in Releases!"; exit 1; }
@@ -32,10 +32,12 @@ jobs:
             rm -r "$extract_dir"
           done
 
-      - name: Upload Each TAR.GZ File Separately
+      - name: Upload Each TAR.GZ File Separately to Releases
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           for file in converted_files/*.tar.gz; do
             filename=$(basename "$file")
-            echo "Uploading $filename..."
+            echo "Uploading $filename to GitHub Releases..."
             gh release upload latest "$file" --clobber
           done
