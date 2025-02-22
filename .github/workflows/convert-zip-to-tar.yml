@@ -12,15 +12,31 @@ jobs:
 
       - name: Download latest release ZIP files
         run: |
-          mkdir release_files
-          gh release download --pattern "*.zip" --dir release_files || { echo "No ZIP files found in Releases!"; exit 1; }
+          mkdir -p release_files
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/Angize/3x-ui/releases/latest | jq -r '.tag_name')
+
+          if [ "$LATEST_RELEASE" = "null" ]; then
+            echo "No latest release found!"
+            exit 1
+          fi
+          
+          ZIP_URLS=$(curl -s https://api.github.com/repos/Angize/3x-ui/releases/latest | jq -r '.assets[] | select(.name | endswith(".zip")) | .browser_download_url')
+
+          if [ -z "$ZIP_URLS" ]; then
+            echo "No ZIP files found in latest release!"
+            exit 1
+          fi
+          
+          for url in $ZIP_URLS; do
+            wget -P release_files "$url"
+          done
 
       - name: Check available disk space
         run: df -h
 
       - name: Convert Each ZIP File to TAR.GZ Separately
         run: |
-          mkdir converted_files
+          mkdir -p converted_files
           for file in release_files/*.zip; do
             echo "Processing $file..."
             extract_dir="extracted_$(basename "$file" .zip)"
