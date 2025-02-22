@@ -13,7 +13,7 @@ jobs:
       - name: Download latest release ZIP files
         run: |
           mkdir release_files
-          wget -nv -O latest_release.zip "https://github.com/YOUR_GITHUB_USERNAME/3x-ui/releases/latest/download/YOUR_FILE.zip"
+          wget -nv -O latest_release.zip "https://github.com/Angize/3x-ui/releases/latest/download/YOUR_FILE.zip"
           mv latest_release.zip release_files/
           if [ ! -s release_files/latest_release.zip ]; then
             echo "No ZIP files found in Releases!"
