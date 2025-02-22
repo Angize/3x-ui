@@ -1,4 +1,4 @@
-name: Convert ZIP to TAR.GZ and Store in Artifacts
+name: Convert ZIP to TAR.GZ
 
 on:
   workflow_dispatch:  # اجرای دستی از GitHub Actions
@@ -11,14 +11,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download latest release ZIP files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release_files
-          wget -nv -O latest_release.zip "https://github.com/Angize/3x-ui/releases/latest/download/YOUR_FILE.zip"
-          mv latest_release.zip release_files/
-          if [ ! -s release_files/latest_release.zip ]; then
-            echo "No ZIP files found in Releases!"
-            exit 1
-          fi
+          gh release download --pattern "*.zip" --dir release_files || { echo "No ZIP files found in Releases!"; exit 1; }
 
       - name: Check available disk space
         run: df -h
@@ -35,8 +32,10 @@ jobs:
             rm -r "$extract_dir"
           done
 
-      - name: Upload Each TAR.GZ File to Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: converted-tar-files
-          path: converted_files/
+      - name: Upload Each TAR.GZ File Separately
+        run: |
+          for file in converted_files/*.tar.gz; do
+            filename=$(basename "$file")
+            echo "Uploading $filename..."
+            gh release upload latest "$file" --clobber
+          done
