@@ -1,4 +1,4 @@
-name: Convert ZIP to TAR.GZ
+name: Convert Each ZIP to TAR.GZ
 
 on:
   workflow_dispatch:  # اجرای دستی از GitHub Actions
@@ -20,24 +20,22 @@ jobs:
       - name: Check available disk space
         run: df -h
 
-      - name: Convert ZIP files to TAR.GZ
+      - name: Convert Each ZIP File to TAR.GZ Separately
         run: |
-          if ls release_files/*.zip 1> /dev/null 2>&1; then
-            mkdir converted_files
-            for file in release_files/*.zip; do
-              echo "Processing $file..."
-              extract_dir="extracted_$(basename "$file" .zip)"
-              unzip "$file" -d "$extract_dir" || { echo "Error extracting $file"; exit 1; }
-              tar -czvf "converted_files/$(basename "$file" .zip).tar.gz" "$extract_dir"
-              rm -r "$extract_dir"
-            done
-          else
-            echo "No ZIP files found!"
-            exit 0
-          fi
+          mkdir converted_files
+          for file in release_files/*.zip; do
+            echo "Processing $file..."
+            extract_dir="extracted_$(basename "$file" .zip)"
+            unzip "$file" -d "$extract_dir" || { echo "Error extracting $file"; exit 1; }
+            tar_filename="$(basename "$file" .zip).tar.gz"
+            tar -czvf "converted_files/$tar_filename" "$extract_dir"
+            rm -r "$extract_dir"
+          done
 
-      - name: Upload Converted TAR.GZ Files
-        uses: actions/upload-artifact@v4
-        with:
-          name: converted-tar-files
-          path: converted_files/
+      - name: Upload Each TAR.GZ File Separately
+        run: |
+          for file in converted_files/*.tar.gz; do
+            filename=$(basename "$file")
+            echo "Uploading $filename..."
+            gh release upload latest "$file" --clobber
+          done
