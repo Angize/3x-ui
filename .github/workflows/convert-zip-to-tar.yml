@@ -1,7 +1,7 @@
 name: Convert ZIP to TAR.GZ
 
 on:
-  workflow_dispatch:  # اجرای دستی از طریق GitHub Actions
+  workflow_dispatch:  # اجرای دستی از GitHub Actions
 
 jobs:
   convert:
@@ -10,17 +10,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Find and Convert ZIP files to TAR.GZ
+      - name: Download latest release ZIP files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir converted_files
-          for file in *.zip; do
-            unzip "$file" -d extracted_"${file%.zip}"
-            tar -czvf "converted_files/${file%.zip}.tar.gz" extracted_"${file%.zip}"
-            rm -r extracted_"${file%.zip}"
-          done
+          mkdir release_files
+          gh release download --pattern "*.zip" --dir release_files || { echo "No ZIP files found in Releases!"; exit 1; }
+
+      - name: Check available disk space
+        run: df -h
+
+      - name: Convert ZIP files to TAR.GZ
+        run: |
+          if ls release_files/*.zip 1> /dev/null 2>&1; then
+            mkdir converted_files
+            for file in release_files/*.zip; do
+              echo "Processing $file..."
+              unzip -q --fast-read "$file" -d extracted_"${file%.zip}" || { echo "Error extracting $file"; exit 1; }
+              tar -czvf "converted_files/${file%.zip}.tar.gz" extracted_"${file%.zip}"
+              rm -r extracted_"${file%.zip}"
+            done
+          else
+            echo "No ZIP files found!"
+            exit 0
+          fi
 
       - name: Upload Converted TAR.GZ Files
-        uses: actions/upload-artifact@v4  # **به‌روزرسانی به v4**
+        uses: actions/upload-artifact@v4
         with:
           name: converted-tar-files
           path: converted_files/
