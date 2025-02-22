@@ -1,0 +1,26 @@
+name: Convert ZIP to TAR.GZ
+
+on:
+  workflow_dispatch:  # اجرای دستی
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Find and Convert ZIP files to TAR.GZ
+        run: |
+          mkdir converted_files
+          for file in *.zip; do
+            unzip "$file" -d extracted_"${file%.zip}"
+            tar -czvf "converted_files/${file%.zip}.tar.gz" extracted_"${file%.zip}"
+            rm -r extracted_"${file%.zip}"
+          done
+
+      - name: Upload Converted TAR.GZ Files
+        uses: actions/upload-artifact@v3
+        with:
+          name: converted-tar-files
+          path: converted_files/
