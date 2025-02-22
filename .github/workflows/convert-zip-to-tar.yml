@@ -26,9 +26,10 @@ jobs:
             mkdir converted_files
             for file in release_files/*.zip; do
               echo "Processing $file..."
-              unzip -q --fast-read "$file" -d extracted_"${file%.zip}" || { echo "Error extracting $file"; exit 1; }
-              tar -czvf "converted_files/${file%.zip}.tar.gz" extracted_"${file%.zip}"
-              rm -r extracted_"${file%.zip}"
+              extract_dir="extracted_$(basename "$file" .zip)"
+              unzip "$file" -d "$extract_dir" || { echo "Error extracting $file"; exit 1; }
+              tar -czvf "converted_files/$(basename "$file" .zip).tar.gz" "$extract_dir"
+              rm -r "$extract_dir"
             done
           else
             echo "No ZIP files found!"
