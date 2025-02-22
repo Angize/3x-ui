@@ -42,15 +42,12 @@ jobs:
             extract_dir="extracted_$(basename "$file" .zip)"
             unzip "$file" -d "$extract_dir" || { echo "Error extracting $file"; exit 1; }
             tar_filename="$(basename "$file" .zip).tar.gz"
-            tar -czvf "$tar_filename" "$extract_dir"
-            mv "$tar_filename" converted_files/
+            tar -czvf "converted_files/$tar_filename" "$extract_dir"
             rm -r "$extract_dir"
           done
 
       - name: Upload Each TAR.GZ File Separately to Artifacts
-        run: |
-          for file in converted_files/*.tar.gz; do
-            filename=$(basename "$file")
-            echo "Uploading $filename..."
-            gh run upload-artifact --name "$filename" --path "$file"
-          done
+        uses: actions/upload-artifact@v4
+        with:
+          name: converted-tar-files
+          path: converted_files/
