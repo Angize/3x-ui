@@ -1,14 +1,14 @@
 name: Convert ZIP to TAR.GZ
 
 on:
-  workflow_dispatch:  # اجرای دستی
+  workflow_dispatch:  # اجرای دستی از طریق GitHub Actions
 
 jobs:
   convert:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Find and Convert ZIP files to TAR.GZ
         run: |
@@ -20,7 +20,7 @@ jobs:
           done
 
       - name: Upload Converted TAR.GZ Files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # **به‌روزرسانی به v4**
         with:
           name: converted-tar-files
           path: converted_files/
